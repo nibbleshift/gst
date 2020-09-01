@@ -70,19 +70,31 @@ const (
 	PadProbeTypeScheduling = C.GST_PAD_PROBE_TYPE_SCHEDULING
 )
 
+type PadProbeReturn int
+
+const (
+	GstPadProbeDrop = C.GST_PAD_PROBE_DROP
+	GstPadProbeOk = C.GST_PAD_PROBE_OK
+	GstPadProbeRemove = C.GST_PAD_PROBE_REMOVE
+	GstPadProbePass = C.GST_PAD_PROBE_PASS
+	GstPadProbeHandled = C.GST_PAD_PROBE_HANDLED
+
+)
+
 type PadTemplate struct {
 	C *C.GstPadTemplate
 }
 
 type Pad struct {
 	pad *C.GstPad
+	onPadAddProbe PadProbeCallback
 }
 
 type PadProbeInfo struct {
 	pad *C.GstPadProbeInfo
 }
 
-type PadProbeCallback func(pad *Pad, info *PadProbeInfo)
+type PadProbeCallback func(pad *Pad, info *PadProbeInfo) (PadProbeReturn)
 
 func (p *Pad) Link(sink *Pad) (padLinkReturn PadLinkReturn) {
 	padLinkReturn = PadLinkReturn(C.gst_pad_link(p.pad, sink.pad))
@@ -117,6 +129,8 @@ func (p *Pad) Name() string {
 }
 
 func (p *Pad) AddProbe(mask PadProbeType, callback PadProbeCallback) {
+	p.onPadAddProbe = callback
+
 	C.gst_pad_add_probe(p.pad, C.GstPadProbeType(mask), C.GstPadProbeCallback(callback), nil, nil)
 }
 
