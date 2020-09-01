@@ -43,6 +43,33 @@ const (
 	PadLinkRefused                      = C.GST_PAD_LINK_REFUSED
 )
 
+type PadProbeType int
+
+const (
+	PadProbeTypeInvalid = C.GST_PAD_PROBE_TYPE_INVALID
+	PadProbeTypeIdle = C.GST_PAD_PROBE_TYPE_IDLE
+	PadProbeTypeBlock = C.GST_PAD_PROBE_TYPE_BLOCK
+	PadProbeTypeBuffer = C.GST_PAD_PROBE_TYPE_BUFFER
+	PadProbeTypeBufferList = C.GST_PAD_PROBE_TYPE_BUFFER_LIST
+	PadProbeTypeEventDownstream = C.GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM
+	PadProbeTypeEventUpstream = C.GST_PAD_PROBE_TYPE_EVENT_UPSTREAM
+	PadProbeTypeEventFlush = C.GST_PAD_PROBE_TYPE_EVENT_FLUSH
+	PadProbeTypeQueryDownstream = C.GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM
+	PadProbeTypeQueryUpstream = C.GST_PAD_PROBE_TYPE_QUERY_UPSTREAM
+	PadProbeTypePush = C.GST_PAD_PROBE_TYPE_PUSH
+	PadProbeTypePull = C.GST_PAD_PROBE_TYPE_PULL
+	PadProbeTypeBlocking = C.GST_PAD_PROBE_TYPE_BLOCKING
+	PadProbeTypeDataDownstream = C.GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM
+	PadProbeTypeDataUpstream = C.GST_PAD_PROBE_TYPE_DATA_UPSTREAM
+	PadProbeTypeDataBoth = C.GST_PAD_PROBE_TYPE_DATA_BOTH
+	PadProbeTypeBlockDownstream = C.GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM
+	PadProbeTypeBlockUpstream = C.GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM
+	PadProbeTypeEventBoth = C.GST_PAD_PROBE_TYPE_EVENT_BOTH
+	PadProbeTypeQueryBoth = C.GST_PAD_PROBE_TYPE_QUERY_BOTH
+	PadProbeTypeAllBoth = C.GST_PAD_PROBE_TYPE_ALL_BOTH
+	PadProbeTypeScheduling = C.GST_PAD_PROBE_TYPE_SCHEDULING
+)
+
 type PadTemplate struct {
 	C *C.GstPadTemplate
 }
@@ -50,6 +77,12 @@ type PadTemplate struct {
 type Pad struct {
 	pad *C.GstPad
 }
+
+type PadProbeInfo struct {
+	pad *C.GstPadProbeInfo
+}
+
+type PadProbeCallback func(pad *Pad, info *PadProbeInfo)
 
 func (p *Pad) Link(sink *Pad) (padLinkReturn PadLinkReturn) {
 	padLinkReturn = PadLinkReturn(C.gst_pad_link(p.pad, sink.pad))
@@ -81,6 +114,10 @@ func (p *Pad) Name() string {
 	str := C.GoString((*C.char)(unsafe.Pointer(CStr)))
 
 	return str
+}
+
+func (p *Pad) AddProbe(mask PadProbeType, callback PadProbeCallback) {
+	C.gst_pad_add_probe(p.pad, C.GstPadProbeType(mask), C.GstPadProbeCallback(callback), nil, nil)
 }
 
 func (p *Pad) IsEOS() bool {
